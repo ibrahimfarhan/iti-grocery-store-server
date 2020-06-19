@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GroceryStore.DbLayer\GroceryStore.DbLayer.csproj" />
+    <ProjectReference Include="..\ITI.DbManager\ITI.DbManager\ITI.DbManager.csproj" />
+  </ItemGroup>
+
+</Project>
