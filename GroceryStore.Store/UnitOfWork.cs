@@ -11,8 +11,6 @@ namespace GroceryStore.Store
 {
     public class UnitOfWork
     {
-        public SignInManager<ApplicationUser> SignInManager { get; set; }
-        public UserManager<ApplicationUser> UserManager { get; set; }
         public ProductManager ProductManager { get; set; }
         public CategoryManager CategoryManager { get; set; }
         public OrderManager OrderManager { get; set; }
@@ -20,11 +18,8 @@ namespace GroceryStore.Store
         public CartProductManager CartProductManager { get; set; }
         public OrderItemManager OrderItemManager { get; set; }
 
-        public UnitOfWork(ApplicationDbContext ctx, 
-            SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager)
+        public UnitOfWork(ApplicationDbContext ctx)
         {
-            UserManager = userManager;
-            SignInManager = signInManager;
             ProductManager = new ProductManager(ctx);
             CategoryManager = new CategoryManager(ctx);
             OrderManager = new OrderManager(ctx);
