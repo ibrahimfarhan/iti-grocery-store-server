@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using GroceryStore.DbLayer;
 using GroceryStore.DbLayer.Entities;
 using GroceryStore.Store;
+using GroceryStore.Web.Hubs;
 
 namespace GroceryStore.Web
 {
@@ -44,6 +45,15 @@ namespace GroceryStore.Web
                 .AddIdentityServerJwt();
             services.AddControllersWithViews();
             services.AddRazorPages();
+            services.AddSignalR();
+            services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
+            {
+                builder
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials()
+                .WithOrigins("http://localhost:4200");
+            }));
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
@@ -73,6 +83,8 @@ namespace GroceryStore.Web
                 app.UseSpaStaticFiles();
             }
 
+            app.UseCors("CorsPolicy");
+
             app.UseRouting();
 
             app.UseAuthentication();
@@ -84,6 +96,7 @@ namespace GroceryStore.Web
                     name: "default",
                     pattern: "{controller}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
+                endpoints.MapHub<OrderHub>("/orderHub");
             });
 
             app.UseSpa(spa =>
