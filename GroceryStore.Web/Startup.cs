@@ -9,9 +9,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using GroceryStore.DbLayer;
 using GroceryStore.DbLayer.Entities;
 using GroceryStore.Store;
+using Microsoft.OpenApi.Models;
 
 namespace GroceryStore.Web
 {
@@ -39,6 +41,16 @@ namespace GroceryStore.Web
 
             services.AddIdentityServer()
                 .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Description = "API Task fo excelsystem",
+                    Title = "API Task",
+                    Version = "v1"
+
+                });
+            });
 
             services.AddAuthentication()
                 .AddIdentityServerJwt();
@@ -49,6 +61,7 @@ namespace GroceryStore.Web
             {
                 configuration.RootPath = "ClientApp/dist";
             });
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -72,6 +85,14 @@ namespace GroceryStore.Web
             {
                 app.UseSpaStaticFiles();
             }
+            app.UseSwagger();
+            app.UseSwaggerUI(cfg =>
+            {
+                string swaggerJsonBasePath = string.IsNullOrWhiteSpace(cfg.RoutePrefix) ? "." : "..";
+                // c.SwaggerEndpoint($"{swaggerJsonBasePath}/swagger/v1/swagger.json", "My API");
+                cfg.SwaggerEndpoint($"{swaggerJsonBasePath}/swagger/v1/swagger.json", "API Task");
+                cfg.RoutePrefix = string.Empty;
+            });
 
             app.UseRouting();
 
@@ -98,6 +119,7 @@ namespace GroceryStore.Web
                     spa.UseAngularCliServer(npmScript: "start");
                 }
             });
+           
         }
     }
 }
