@@ -41,16 +41,7 @@ namespace GroceryStore.Web
 
             services.AddIdentityServer()
                 .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Description = "API Task fo excelsystem",
-                    Title = "API Task",
-                    Version = "v1"
-
-                });
-            });
+            
 
             services.AddAuthentication()
                 .AddIdentityServerJwt();
@@ -85,14 +76,7 @@ namespace GroceryStore.Web
             {
                 app.UseSpaStaticFiles();
             }
-            app.UseSwagger();
-            app.UseSwaggerUI(cfg =>
-            {
-                string swaggerJsonBasePath = string.IsNullOrWhiteSpace(cfg.RoutePrefix) ? "." : "..";
-                // c.SwaggerEndpoint($"{swaggerJsonBasePath}/swagger/v1/swagger.json", "My API");
-                cfg.SwaggerEndpoint($"{swaggerJsonBasePath}/swagger/v1/swagger.json", "API Task");
-                cfg.RoutePrefix = string.Empty;
-            });
+           
 
             app.UseRouting();
 

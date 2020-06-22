@@ -26,7 +26,12 @@ namespace GroceryStore.Web.Controllers
         public  async Task<IActionResult> AllOrders()
         {
           var alloders = await unitOfWork.OrderManager.GetAllBindAsync();
-            return Ok(alloders);
+            if (alloders != null)
+            {
+                return Ok(alloders);
+            }
+            return StatusCode(500, "server error add");
+           
         }
         [Authorize(Roles = "Admin")]
         [HttpGet("{id:int}")]
@@ -34,14 +39,26 @@ namespace GroceryStore.Web.Controllers
         {
             
             var orderbyid =await unitOfWork.OrderManager.GetByIdAsync(id);
-           
-           return Ok(orderbyid);
+            if (orderbyid != null)
+            {
+                return Ok(orderbyid);
+            }
+            return StatusCode(500, "server error get order ");
+
         }
-        [HttpGet("id:string")]
+        [HttpGet]
         public IActionResult orders()
-        {
+        { 
+            //get all orders of current user
            var id= User.FindFirstValue(ClaimTypes.NameIdentifier);
-           return Ok(unitOfWork.OrderManager.GetAll().Where(i => i.UserId == id));
+            var orders = unitOfWork.OrderManager.GetAll().Where(i => i.UserId == id);
+            if (orders != null)
+            {
+                return Ok(orders);
+            }
+            return StatusCode(500, "server error get orders ");
+           
+
         }
         [HttpPut]
         [Authorize(Roles = "Admin")]
@@ -73,8 +90,14 @@ namespace GroceryStore.Web.Controllers
         public async Task<IActionResult> Deleteorder(int  id)
         {
             Order order = unitOfWork.OrderManager.GetById(id);
-           var removeorder=await unitOfWork.OrderManager.RemoveAsync(order);
-            return Ok(removeorder);
+            var removeorder = await unitOfWork.OrderManager.RemoveAsync(order);
+            if (removeorder)
+            {
+                return Ok();
+            }
+            return StatusCode(500, "server error Delete");
+            
+           
         }
 
     }
