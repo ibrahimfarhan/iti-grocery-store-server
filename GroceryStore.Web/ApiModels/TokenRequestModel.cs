@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GroceryStore.Web.ViewModels
+namespace GroceryStore.Web.ApiModels
 {
     public class TokenRequestModel
     {

@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using GroceryStore.DbLayer.Entities;
 using GroceryStore.Web.ApiModels;
 using GroceryStore.Web.Services;
-using GroceryStore.Web.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
