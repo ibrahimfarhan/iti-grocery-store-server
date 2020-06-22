@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using GroceryStore.DbLayer;
 using GroceryStore.DbLayer.Entities;
 using GroceryStore.Store;
@@ -40,6 +41,7 @@ namespace GroceryStore.Web
 
             services.AddIdentityServer()
                 .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
+            
 
             services.AddControllersWithViews()
                 .AddNewtonsoftJson(options =>
@@ -64,6 +66,7 @@ namespace GroceryStore.Web
             {
                 configuration.RootPath = "ClientApp/dist";
             });
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -87,6 +90,7 @@ namespace GroceryStore.Web
             {
                 app.UseSpaStaticFiles();
             }
+           
 
             app.UseCors("CorsPolicy");
 
@@ -116,6 +120,7 @@ namespace GroceryStore.Web
                     spa.UseAngularCliServer(npmScript: "start");
                 }
             });
+           
         }
     }
 }
