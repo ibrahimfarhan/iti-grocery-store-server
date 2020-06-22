@@ -14,6 +14,7 @@ namespace GroceryStore.DbLayer.Entities
 
         [ForeignKey("User")]
         public string UserId { get; set; }
+        public decimal Quantity { get; set; }
 
         public Product Product { get; set; }
         public ApplicationUser User { get; set; }
