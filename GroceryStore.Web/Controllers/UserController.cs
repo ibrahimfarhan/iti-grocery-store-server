@@ -31,5 +31,12 @@ namespace GroceryStore.Web.Controllers
             
             return StatusCode(result.StatusCode,result.Data);
         }
+
+        [HttpPost("token")]
+        public async Task<IActionResult> GetTokenAsync(TokenRequestModel model)
+        {
+            var result = await _userService.GetTokenAsync(model);
+            return Ok(result);
+        }
     }
 }
