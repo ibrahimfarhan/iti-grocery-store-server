@@ -1,7 +1,6 @@
 ﻿using GroceryStore.DbLayer.Entities;
 using GroceryStore.Web.Constants;
 using GroceryStore.Web.Settings;
-using GroceryStore.Web.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using System;
@@ -13,14 +12,10 @@ using System.Text;
 using System.Threading.Tasks;
 using GroceryStore.Web.ApiModels;
 using Microsoft.IdentityModel.Tokens;
+using System.Net;
 
 namespace GroceryStore.Web.Services
 {
-    public class ApiResult
-    {
-        public int StatusCode { get; set; }
-        public object Data { get; set; }
-    }
     public class UserService : IUserService
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -38,31 +33,92 @@ namespace GroceryStore.Web.Services
             _jwt = jwt.Value;
         }
 
-        public async Task<AuthenticationModel> GetTokenAsync(TokenRequestModel model)
+        public async Task<ApiResponse> GetTokenAsync(TokenRequestModel model)
         {
+            var response = new ApiResponse();
             var authenticationModel = new AuthenticationModel();
             var user = await _userManager.FindByEmailAsync(model.Email);
+
             if (user == null)
             {
-                authenticationModel.IsAuthenticated = false;
-                authenticationModel.Message = $"No Accounts Registered with {model.Email}.";
-                return authenticationModel;
+                response.StatusCode = (int)HttpStatusCode.BadRequest;
+                response.Data = $"No Accounts Registered with {model.Email}.";
+
+                return response;
             }
+
             if (await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                authenticationModel.IsAuthenticated = true;
                 JwtSecurityToken jwtSecurityToken = await CreateJwtToken(user);
                 authenticationModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
                 authenticationModel.Email = user.Email;
-                authenticationModel.UserName = user.UserName;
+                authenticationModel.FullName = $"{user.FirstName} {user.LastName}";
+
                 var rolesList = await _userManager.GetRolesAsync(user).ConfigureAwait(false);
                 authenticationModel.Roles = rolesList.ToList();
-                return authenticationModel;
+
+                response.StatusCode = (int)HttpStatusCode.OK;
+                response.Data = authenticationModel;
+
+                return response;
             }
-            authenticationModel.IsAuthenticated = false;
-            authenticationModel.Message = $"Incorrect Credentials for user {user.Email}.";
-            return authenticationModel;
+
+            response.StatusCode = (int)HttpStatusCode.BadRequest;
+            response.Data = $"Incorrect Credentials for user {user.Email}.";
+            return response;
         }
+
+        public async Task<ApiResponse> RegisterAsync(RegisterModel model)
+        {
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                PhoneNumber = model.PhoneNumber,
+                Address = model.Address
+            };
+
+            var userWithSameEmail = await _userManager.FindByEmailAsync(model.Email);
+
+            if (userWithSameEmail != null)
+            {
+                return new ApiResponse
+                {
+                    Data = "There exists an account with this email.",
+                    StatusCode = (int)HttpStatusCode.BadRequest,
+                };
+            }
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(user, Constants.Authorization.default_role.ToString());
+                model.Role = Constants.Authorization.default_role.ToString();
+                return new ApiResponse
+                {
+                    Data = new User
+                    {
+                        FullName = model.FirstName + " " + model.LastName,
+                        Email = model.Email,
+                        Address = model.Address,
+                        PhoneNumber = model.PhoneNumber,
+                        Role = model.Role,
+                    },
+
+                    StatusCode = (int)HttpStatusCode.OK,
+                };
+            }
+
+            return new ApiResponse
+            {
+                Data = "Error while creating the account.",
+                StatusCode = (int)HttpStatusCode.InternalServerError,
+            };
+        }
+
         private async Task<JwtSecurityToken> CreateJwtToken(ApplicationUser user)
         {
             var userClaims = await _userManager.GetClaimsAsync(user);
@@ -95,56 +151,6 @@ namespace GroceryStore.Web.Services
                 expires: DateTime.UtcNow.AddMinutes(_jwt.DurationInMinutes),
                 signingCredentials: signingCredentials);
             return jwtSecurityToken;
-        }
-
-        // Here, we take in the RegisterModel object, 
-        // and create a new ApplicationUser model object from it.
-        // We will also have some kind of validation to check if the email is already registered with our api.
-        // If the email is not used already, we will proceed to creating the user and adding a Role ‘User’.
-        // Else, let’s send a message that says, “Already Registered.”
-        public async Task<ApiResult> RegisterAsync(RegisterModel model)
-        {
-            var user = new ApplicationUser
-            {
-                UserName = model.Email,
-                Email = model.Email,
-                FirstName = model.FirstName,
-                LastName = model.LastName,
-                PhoneNumber = model.PhoneNumber,
-                Address = model.Address
-            };
-            var userWithSameEmail = await _userManager.FindByEmailAsync(model.Email);
-            if (userWithSameEmail == null)
-            {
-                var result = await _userManager.CreateAsync(user, model.Password);
-
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(user, Authorization.default_role.ToString());
-                    model.Role = Authorization.default_role.ToString();
-                    return new ApiResult
-                    {
-                        Data = new User
-                        {
-                            FullName = model.FirstName + " " + model.LastName,
-                            Email = model.Email,
-                            Address = model.Address,
-                            PhoneNumber = model.PhoneNumber,
-                            Role = model.Role,
-                        },
-                        StatusCode = 201,
-                    };
-                }
-
-            }
-
-            return new ApiResult
-            {
-                Data = "Error",
-                StatusCode = 404,
-            };
-
-
         }
     }
 }

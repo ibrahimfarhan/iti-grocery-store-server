@@ -24,18 +24,15 @@ namespace GroceryStore.Web.Controllers
         [HttpPost("register")]
         public async Task<ActionResult> RegisterAsync(RegisterModel model)
         {
-            // To do implement error message for the retrieved registeration from the RegisterAsync method.
-            // the result should be the registered user object  
             var result = await _userService.RegisterAsync(model);
-            
-            return StatusCode(result.StatusCode,result.Data);
+            return StatusCode(result.StatusCode, result.Data);
         }
 
-        [HttpPost("token")]
-        public async Task<IActionResult> GetTokenAsync(TokenRequestModel model)
+        [HttpPost("login")]
+        public async Task<IActionResult> LoginAsync(TokenRequestModel model)
         {
             var result = await _userService.GetTokenAsync(model);
-            return Ok(result);
+            return StatusCode(result.StatusCode, result.Data);
         }
     }
 }

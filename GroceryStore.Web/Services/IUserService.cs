@@ -1,4 +1,4 @@
-﻿using GroceryStore.Web.ViewModels;
+﻿using GroceryStore.Web.ApiModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +9,8 @@ namespace GroceryStore.Web.Services
 {
     public interface IUserService
     {
-        Task<ApiResult> RegisterAsync(RegisterModel model);
+        Task<ApiResponse> RegisterAsync(RegisterModel model);
 
-        Task<AuthenticationModel> GetTokenAsync(TokenRequestModel model);
+        Task<ApiResponse> GetTokenAsync(TokenRequestModel model);
     }
 }

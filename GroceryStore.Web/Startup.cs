@@ -13,13 +13,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
-using GroceryStore.DbLayer;
-using GroceryStore.DbLayer.Entities;
-using GroceryStore.Store;
 using GroceryStore.Web.Hubs;
 using Microsoft.IdentityModel.Tokens;
-
 
 namespace GroceryStore.Web
 {
@@ -41,6 +36,8 @@ namespace GroceryStore.Web
                     Configuration.GetConnectionString("DefaultConnection"),
                     x => x.MigrationsAssembly("GroceryStore.DbLayer")
                 ));
+
+            services.AddSignalR();
 
             // Configuration from AppSettings
             services.Configure<JWT>(Configuration.GetSection("JWT"));
@@ -79,6 +76,11 @@ namespace GroceryStore.Web
             services.AddScoped<UnitOfWork>();
 
             services.AddControllers();
+
+            services.AddSpaStaticFiles(configuration =>
+            {
+                configuration.RootPath = "ClientApp/grocery-store-webapp";
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -89,7 +91,7 @@ namespace GroceryStore.Web
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseRouting();
 
@@ -102,7 +104,13 @@ namespace GroceryStore.Web
                 endpoints.MapControllers();
                 endpoints.MapHub<OrderHub>("/orderHub");
             });
-           
+
+            app.UseSpaStaticFiles();
+
+            app.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = "ClientApp/grocery-store-webapp";
+            });
         }
     }
 }

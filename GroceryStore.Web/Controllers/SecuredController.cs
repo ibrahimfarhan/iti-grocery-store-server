@@ -10,10 +10,10 @@ namespace GroceryStore.Web.Controllers
     
     public class SecuredController : ControllerBase
     {
-        [HttpGet]
-        public async Task<IActionResult> GetSecuredData()
-        {
-            return Ok("This Secured Data is available only for Authenticated Users.");
-        }
+        //[HttpGet]
+        //public async Task<IActionResult> GetSecuredData()
+        //{
+        //    return Ok("This Secured Data is available only for Authenticated Users.");
+        //}
     }
 }
