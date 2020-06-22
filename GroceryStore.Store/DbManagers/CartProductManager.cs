@@ -2,6 +2,10 @@
 using ITI.DbManager;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace GroceryStore.Store.DbManagers
 {
@@ -9,6 +13,11 @@ namespace GroceryStore.Store.DbManagers
     {
         public CartProductManager(DbContext ctx) : base(ctx)
         {
+        }
+
+        public async Task<IEnumerable<CartProduct>> GetCartProducts()
+        {
+            return await Set.Include(p => p.Product).ToListAsync();
         }
     }
 }
