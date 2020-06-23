@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using GroceryStore.DbLayer.Entities;
 using GroceryStore.Store;
@@ -26,17 +27,15 @@ namespace GroceryStore.Web.Controllers
             try
             {
                 var categories = await UnitOfWork.CategoryManager.GetAllBindAsync();
-                if (categories == null)
-                {
-                    return NotFound();
-                }
-                return Ok(categories);
+
+                if (categories == null) return Ok();
+
+                return Ok(categories.Select(c => new { c.Id, c.Name }));
             }
             catch (Exception)
             {
-                return BadRequest();
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
-
         }
 
         [HttpPost]

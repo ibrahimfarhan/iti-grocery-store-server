@@ -33,7 +33,23 @@ namespace GroceryStore.Web.Services
             _jwt = jwt.Value;
         }
 
-        public async Task<ApiResponse> GetTokenAsync(TokenRequestModel model)
+        public async Task<AuthenticationModel> GetUser(ClaimsPrincipal user)
+        {
+            var email = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+            var u = await _userManager.FindByEmailAsync(email);
+            var rolesList = await _userManager.GetRolesAsync(u).ConfigureAwait(false);
+
+            return new AuthenticationModel
+            {
+                FullName = $"{u.FirstName} {u.LastName}",
+                Address = u.Address,
+                Email = u.Email,
+                PhoneNumber = u.PhoneNumber,
+                Roles = rolesList.ToList(),
+            };
+        }
+
+        public async Task<ApiResponse> LoginAsync(TokenRequestModel model)
         {
             var response = new ApiResponse();
             var authenticationModel = new AuthenticationModel();
@@ -97,15 +113,20 @@ namespace GroceryStore.Web.Services
             {
                 await _userManager.AddToRoleAsync(user, Constants.Authorization.default_role.ToString());
                 model.Role = Constants.Authorization.default_role.ToString();
+
+                JwtSecurityToken jwtSecurityToken = await CreateJwtToken(user);
+                var token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+
                 return new ApiResponse
                 {
-                    Data = new User
+                    Data = new AuthenticationModel
                     {
                         FullName = model.FirstName + " " + model.LastName,
                         Email = model.Email,
                         Address = model.Address,
                         PhoneNumber = model.PhoneNumber,
-                        Role = model.Role,
+                        Roles = new List<string> { model.Role },
+                        Token = token
                     },
 
                     StatusCode = (int)HttpStatusCode.OK,
@@ -148,8 +169,9 @@ namespace GroceryStore.Web.Services
                 issuer: _jwt.Issuer,
                 audience: _jwt.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_jwt.DurationInMinutes),
+                expires: DateTime.UtcNow.AddDays(30),
                 signingCredentials: signingCredentials);
+
             return jwtSecurityToken;
         }
     }

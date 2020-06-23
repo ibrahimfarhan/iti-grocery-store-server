@@ -1,7 +1,9 @@
-﻿using GroceryStore.Web.ApiModels;
+﻿using GroceryStore.DbLayer.Entities;
+using GroceryStore.Web.ApiModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,6 +13,8 @@ namespace GroceryStore.Web.Services
     {
         Task<ApiResponse> RegisterAsync(RegisterModel model);
 
-        Task<ApiResponse> GetTokenAsync(TokenRequestModel model);
+        Task<ApiResponse> LoginAsync(TokenRequestModel model);
+
+        Task<AuthenticationModel> GetUser(ClaimsPrincipal user);
     }
 }

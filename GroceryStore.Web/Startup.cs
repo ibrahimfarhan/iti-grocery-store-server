@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text;
 using GroceryStore.DbLayer;
 using GroceryStore.DbLayer.Entities;
@@ -37,6 +37,13 @@ namespace GroceryStore.Web
                     x => x.MigrationsAssembly("GroceryStore.DbLayer")
                 ));
 
+            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            }));
+
             services.AddSignalR();
 
             // Configuration from AppSettings
@@ -60,7 +67,6 @@ namespace GroceryStore.Web
                        ValidateAudience = true,
                        ValidateLifetime = true,
                        ClockSkew = TimeSpan.Zero,
-
                        ValidIssuer = Configuration["JWT:Issuer"],
                        ValidAudience = Configuration["JWT:Audience"],
                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Key"]))
@@ -69,7 +75,11 @@ namespace GroceryStore.Web
             );
 
             // User Manager Services
-            services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+            services.AddIdentity<ApplicationUser, IdentityRole>().
+                AddEntityFrameworkStores<ApplicationDbContext>();
+
+            services.ConfigureApplicationCookie(options => options.LoginPath = "/api/unauthorized");
+
             services.AddScoped<IUserService, UserService>();
 
             // Unit Of Work Service
@@ -86,6 +96,8 @@ namespace GroceryStore.Web
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseCors("MyPolicy");
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

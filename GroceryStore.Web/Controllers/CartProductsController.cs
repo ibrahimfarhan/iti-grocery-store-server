@@ -13,7 +13,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GroceryStore.Web.Controllers
 {
-    [Route("api/[controller]")]
+    [Authorize]
+    [Route("api/cart-products")]
     [ApiController]
     public class CartProductsController : ControllerBase
     {
@@ -24,7 +25,6 @@ namespace GroceryStore.Web.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> GetCartProducts()
         {
             var userId = this.User.GetUserId();
@@ -48,7 +48,6 @@ namespace GroceryStore.Web.Controllers
 
         [HttpPost]
         [Route("add/{id}")]
-        [Authorize]
         public async Task<IActionResult> AddCartProduct(int id)
         {
             bool isAuthenticated = User.Identity.IsAuthenticated;
@@ -84,7 +83,6 @@ namespace GroceryStore.Web.Controllers
 
         [HttpPost]
         [Route("edit")]
-        [Authorize]
         public async Task<IActionResult> EditCartProduct(CartProduct cartproduct)
         {
             var userId = this.User.GetUserId();
@@ -112,7 +110,6 @@ namespace GroceryStore.Web.Controllers
 
         [HttpPost]
         [Route("delete")]
-        [Authorize]
         public async Task<IActionResult> DeleteCartProduct(CartProduct cartProduct)
         {
             bool result;

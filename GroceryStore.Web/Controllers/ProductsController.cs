@@ -23,16 +23,23 @@ namespace GroceryStore.Web.Controllers
         }
 
         [HttpGet]
+        [Route("all")]
         public async Task<IActionResult> GetProducts()
         {
             try
             {
-                var products = await UnitOfWork.ProductManager.GetAllBindAsync();
-                if(products == null)
+                var products = await UnitOfWork.ProductManager.GetAllBind();
+
+                if (products == null)
                 {
-                    return NotFound();
+                    return Ok();
                 }
-                return Ok(products);
+
+                return Ok(products.Select(p => new 
+                { 
+                    p.Id, p.Name, p.Price, Images = p.Images.Select(i => i.Url),
+                    p.MeasurementUnit, p.Discount, CategoryName = p.Category.Name
+                }));
             }
             catch (Exception)
             {
