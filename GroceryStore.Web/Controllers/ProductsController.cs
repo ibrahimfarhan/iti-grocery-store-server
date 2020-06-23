@@ -28,7 +28,7 @@ namespace GroceryStore.Web.Controllers
         {
             try
             {
-                var products = await UnitOfWork.ProductManager.GetAllBind();
+                var products = await UnitOfWork.ProductManager.GetAllBindAsync();
 
                 if (products == null)
                 {

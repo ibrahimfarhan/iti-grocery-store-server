@@ -53,7 +53,7 @@ namespace GroceryStore.Web.Controllers
                 }));
             }
 
-            catch (Exception)
+            catch
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError);
             }

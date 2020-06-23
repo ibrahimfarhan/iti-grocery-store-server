@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using GroceryStore.Web.ContextsSeed;
 using System.Threading.Tasks;
 using System;
+using GroceryStore.Store;
 
 namespace GroceryStore.Web
 {
@@ -16,7 +17,7 @@ namespace GroceryStore.Web
         {
             var host = CreateHostBuilder(args).Build();
 
-            using(var scope = host.Services.CreateScope())
+            using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 var loggerFactory = services.GetRequiredService<ILoggerFactory>();
@@ -26,7 +27,8 @@ namespace GroceryStore.Web
                     // Seed default Users
                     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
                     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-                    await ApplicationDbContextSeed.SeedEssentialsAsync(userManager, roleManager);
+                    var unitOfWork = services.GetRequiredService<UnitOfWork>();
+                    await ApplicationDbContextSeed.SeedEssentialsAsync(userManager, roleManager, unitOfWork);
                 }
                 catch (Exception ex)
                 {

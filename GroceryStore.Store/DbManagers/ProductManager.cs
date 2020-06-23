@@ -14,7 +14,7 @@ namespace GroceryStore.Store.DbManagers
         {
         }
 
-        public new async Task<IEnumerable<Product>> GetAllBind()
+        public new async Task<IEnumerable<Product>> GetAllBindAsync()
         {
             return await Set.Include(p => p.Category).Include(p => p.Images).ToListAsync();
         }
