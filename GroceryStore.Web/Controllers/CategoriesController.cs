@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using GroceryStore.DbLayer.Entities;
 using GroceryStore.Store;
+using GroceryStore.Web.ApiModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,7 +31,10 @@ namespace GroceryStore.Web.Controllers
 
                 if (categories == null) return Ok();
 
-                return Ok(categories.Select(c => new { c.Id, c.Name }));
+                return Ok(categories.Select(c => new CategoryModel { 
+                    Id = c.Id,
+                    Name = c.Name
+                }));
             }
             catch (Exception)
             {
@@ -48,15 +52,19 @@ namespace GroceryStore.Web.Controllers
                 try
                 {
                     var cat = await UnitOfWork.CategoryManager.AddAsync(category);
-                    if (cat == null)
+                    if (cat == null) return Ok();
+
+                    var categoryModel = new CategoryModel
                     {
-                        return NotFound();
-                    }
-                    return Ok(cat);
+                        Id = cat.Id,
+                        Name = cat.Name
+                    };
+
+                    return Ok(categoryModel);
                 }
                 catch (Exception)
                 {
-                    return BadRequest();
+                    return StatusCode((int)HttpStatusCode.InternalServerError);
                 }
             }
             return BadRequest();
@@ -65,10 +73,15 @@ namespace GroceryStore.Web.Controllers
         [HttpPost]
         [Route("edit")]
         [Authorize(Roles = "admin")]
-        public async Task<IActionResult> EditCategory([FromBody] Category category)
+        public async Task<IActionResult> EditCategory([FromBody] CategoryModel categoryModel)
         {
 
             bool result;
+            var category = new Category { 
+                Id = categoryModel.Id,
+                Name = categoryModel.Name
+            };
+
             if (ModelState.IsValid)
             {
                 try
@@ -76,15 +89,9 @@ namespace GroceryStore.Web.Controllers
                     result = await UnitOfWork.CategoryManager.UpdateAsync(category);
                     return Ok();
                 }
-                catch (Exception ex)
+                catch
                 {
-                    if (ex.GetType().FullName ==
-                             "Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException")
-                    {
-                        return NotFound();
-                    }
-
-                    return BadRequest();
+                    return StatusCode((int)HttpStatusCode.InternalServerError);
                 }
             }
             return BadRequest();
@@ -93,9 +100,14 @@ namespace GroceryStore.Web.Controllers
         [HttpPost]
         [Route("delete")]
         [Authorize(Roles = "admin")]
-        public async Task<IActionResult> DeleteCategory(Category category)
+        public async Task<IActionResult> DeleteCategory(CategoryModel categoryModel)
         {
             bool result;
+            var category = new Category
+            {
+                Id = categoryModel.Id,
+                Name = categoryModel.Name
+            };
             try
             {
                 result = await UnitOfWork.CategoryManager.RemoveAsync(category);
@@ -107,7 +119,7 @@ namespace GroceryStore.Web.Controllers
             }
             catch (Exception)
             {
-                return BadRequest();
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
         }
 
