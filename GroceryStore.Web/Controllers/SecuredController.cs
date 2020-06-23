@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GroceryStore.Web.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [Route("api/[controller]")]
     [ApiController]
     

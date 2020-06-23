@@ -19,7 +19,7 @@ namespace GroceryStore.Web.Constants
 
         public const string default_password = "P@ssw0rd";
 
-        public const Roles default_role = Roles.User;
+        public const Roles default_role = Roles.Admin;
 
     }
 }
