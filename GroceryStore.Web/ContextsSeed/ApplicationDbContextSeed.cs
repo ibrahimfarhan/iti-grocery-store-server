@@ -20,9 +20,14 @@ namespace GroceryStore.Web.ContextsSeed
             )
         {
             // Seed Roles
-            await roleManager.CreateAsync(new IdentityRole(Authorization.Roles.Admin.ToString()));
+            if (roleManager.Roles == null)
+            {
+                await roleManager.CreateAsync(new IdentityRole(Authorization.Roles.Admin.ToString()));
 
-            await roleManager.CreateAsync(new IdentityRole(Authorization.Roles.User.ToString()));
+                await roleManager.CreateAsync(new IdentityRole(Authorization.Roles.User.ToString()));
+
+            }
+
 
             // Seed Default User
             var defaultUser = new ApplicationUser
@@ -50,20 +55,29 @@ namespace GroceryStore.Web.ContextsSeed
                 new Category { Name = "Meats"},
             };
 
-            if (userManager.Users.All(u => u.Id != defaultUser.Id))
+            if (userManager.Users == null)
             {
                 await userManager.CreateAsync(defaultUser, Authorization.default_password);
                 await userManager.AddToRoleAsync(defaultUser, Authorization.default_role.ToString());
-                foreach (var Category in categories)
-                {
-                     await unitOfWork.CategoryManager.AddAsync(Category);
-                }
-                foreach (var product in products)
-                {
-                     await unitOfWork.ProductManager.AddAsync(product);
-                }
                
             }
+
+            if (unitOfWork.ProductManager == null)
+            {
+                foreach (var Product in products)
+                {
+                    await unitOfWork.ProductManager.AddAsync(Product);
+                }
+            }
+            if (unitOfWork.CategoryManager == null)
+            {
+                foreach (var Category in categories)
+                {
+                    await unitOfWork.CategoryManager.AddAsync(Category);
+                }
+            }
+
+
         }
     }
 }
