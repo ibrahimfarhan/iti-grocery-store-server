@@ -15,9 +15,9 @@ namespace GroceryStore.Store.DbManagers
         {
         }
 
-        public async Task<IEnumerable<CartProduct>> GetCartProducts()
+        public async Task<IEnumerable<CartProduct>> GetCartProductsByUserIdAsync(string id)
         {
-            return await Set.Include(p => p.Product).ToListAsync();
+            return await Set.Include(p => p.Product).Where(c => c.UserId == id).ToListAsync();
         }
     }
 }

@@ -140,6 +140,14 @@ namespace GroceryStore.Web.Services
             };
         }
 
+        public async Task<string> GetUserId(ClaimsPrincipal user)
+        {
+            var email = user.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+            var u = await _userManager.FindByEmailAsync(email);
+
+            return u.Id;
+        }
+
         private async Task<JwtSecurityToken> CreateJwtToken(ApplicationUser user)
         {
             var userClaims = await _userManager.GetClaimsAsync(user);

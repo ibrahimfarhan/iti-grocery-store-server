@@ -62,28 +62,32 @@ namespace ITI.DbManager
 
         public bool Remove(TEntity entity)
         {
-            Set.Remove(entity);
+            Set.Attach(entity);
+            _ctx.Entry(entity).State = EntityState.Deleted;
 
             return Ctx.SaveChanges() > 0;
         }
 
         public async Task<bool> RemoveAsync(TEntity entity)
         {
-            Set.Remove(entity);
+            Set.Attach(entity);
+            _ctx.Entry(entity).State = EntityState.Deleted;
 
             return (await Ctx.SaveChangesAsync()) > 0;
         }
 
         public bool Update(TEntity entity)
         {
-            Set.Update(entity);
+            Set.Attach(entity);
+            _ctx.Entry(entity).State = EntityState.Modified;
 
             return Ctx.SaveChanges() > 0;
         }
 
         public async Task<bool> UpdateAsync(TEntity entity)
         {
-            Set.Update(entity);
+            Set.Attach(entity);
+            _ctx.Entry(entity).State = EntityState.Modified;
 
             return (await Ctx.SaveChangesAsync()) > 0;
         }

@@ -16,5 +16,7 @@ namespace GroceryStore.Web.Services
         Task<ApiResponse> LoginAsync(TokenRequestModel model);
 
         Task<AuthenticationModel> GetUser(ClaimsPrincipal user);
+
+        Task<string> GetUserId(ClaimsPrincipal user);
     }
 }

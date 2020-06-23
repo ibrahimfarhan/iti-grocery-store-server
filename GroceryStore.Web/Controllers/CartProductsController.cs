@@ -2,130 +2,159 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using GroceryStore.DbLayer.Entities;
 using GroceryStore.DbLayer.Helpers;
 using GroceryStore.Store;
+using GroceryStore.Web.ApiModels;
+using GroceryStore.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GroceryStore.Web.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [Route("api/cart-products")]
     [ApiController]
     public class CartProductsController : ControllerBase
     {
         public UnitOfWork UnitOfWork;
-        public CartProductsController(UnitOfWork UnitOfWork)
+        private IUserService _userService;
+        public CartProductsController(UnitOfWork UnitOfWork, IUserService userService)
         {
+            _userService = userService;
             this.UnitOfWork = UnitOfWork;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetCartProducts()
         {
-            var userId = this.User.GetUserId();
+            var userId = await _userService.GetUserId(User);
+
             try
             {
-                var products = await UnitOfWork.CartProductManager.GetCartProducts();
-                var filterProductsByUserId = products.Where(p => p.UserId == userId);
-                if(filterProductsByUserId == null)
+                var products = await UnitOfWork.CartProductManager.GetCartProductsByUserIdAsync(userId);
+
+                if (products == null)
                 {
-                    return NotFound();
+                    return Ok();
                 }
                 
-                return Ok(filterProductsByUserId);
-            }
-            catch (Exception)
-            {
-                return BadRequest();
+                return Ok(products.Select(p => new CartProductModel
+                {
+                    ProductId = p.ProductId,
+                    Name = p.Product.Name,
+                    Quantity = p.Quantity,
+                    Price = p.Product.Price,
+                    Discount = p.Product.Discount
+                }));
             }
 
+            catch (Exception)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError);
+            }
         }
 
         [HttpPost]
-        [Route("add/{id}")]
-        public async Task<IActionResult> AddCartProduct(int id)
+        [Route("add")]
+        public async Task<IActionResult> AddCartProduct([FromBody] int id)
         {
-            bool isAuthenticated = User.Identity.IsAuthenticated;
-            if (isAuthenticated)
+            try
             {
-                try
-                {
-                    var userId = this.User.GetUserId();
-                    var prod = await UnitOfWork.ProductManager.GetByIdAsync(id);
-                    if(prod == null)
-                    {
-                        return NotFound();
-                    }
-                    var cartProduct = new CartProduct 
-                    { 
-                        Product = prod ,
-                        UserId = userId,
-                        ProductId = id
-                    };
-                    return Ok(await UnitOfWork.CartProductManager.AddAsync(cartProduct));
-                }
-                catch(Exception)
+                var userId = await _userService.GetUserId(User);
+                var prod = await UnitOfWork.ProductManager.GetByIdAsync(id);
+
+                if (prod == null)
                 {
                     return BadRequest();
                 }
-            }
-            return Unauthorized();
-            //return new ForbidResult();
-            //return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "My error message");
-            //return StatusCode(401, "My error message");
-        }
 
+                var cartProduct = new CartProduct
+                {
+                    UserId = userId,
+                    ProductId = id,
+                    Quantity = 1
+                };
+
+                await UnitOfWork.CartProductManager.AddAsync(cartProduct);
+
+                return Ok();
+            }
+
+            catch
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError);
+            }
+        }
 
         [HttpPost]
         [Route("edit")]
-        public async Task<IActionResult> EditCartProduct(CartProduct cartproduct)
+        public async Task<IActionResult> EditCartProduct(CartProductModel product)
         {
-            var userId = this.User.GetUserId();
+            var userId = await _userService.GetUserId(User);
             bool result;
+
+            CartProduct cartProduct = new CartProduct
+            {
+                UserId = userId,
+                ProductId = product.ProductId,
+                Quantity = product.Quantity
+            };
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    cartproduct.UserId = userId;
-                    result = await UnitOfWork.CartProductManager.UpdateAsync(cartproduct);
-                    if(!result || userId != cartproduct.UserId)
+                    result = await UnitOfWork.CartProductManager.UpdateAsync(cartProduct);
+
+                    if (!result)
                     {
-                        return NotFound();
+                        return BadRequest();
                     }
+
                     return Ok();
                 }
-                catch (Exception)
+
+                catch 
                 {
-                    return BadRequest();
+                    return StatusCode((int)HttpStatusCode.InternalServerError);
                 }
             }
-            return BadRequest();
 
+            return BadRequest();
         }
 
         [HttpPost]
         [Route("delete")]
-        public async Task<IActionResult> DeleteCartProduct(CartProduct cartProduct)
+        public async Task<IActionResult> DeleteCartProduct([FromBody] CartProductModel product)
         {
             bool result;
-            var userId = this.User.GetUserId();
+            var userId = await _userService.GetUserId(User);
+            CartProduct cartProduct = new CartProduct
+            {
+                UserId = userId,
+                ProductId = product.ProductId,
+                Quantity = product.Quantity
+            };
+
             try
             {
                 result = await UnitOfWork.CartProductManager.RemoveAsync(cartProduct);
-                if(!result || cartProduct.UserId != userId)
+                if (!result)
                 {
-                    return NotFound();
+                    return BadRequest();
                 }
+
                 return Ok();
             }
-            catch (Exception)
+
+            catch (Exception e)
             {
-                return BadRequest();
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
         }
     }

@@ -90,7 +90,7 @@ namespace GroceryStore.Web.Controllers
 
         [HttpPost]
         [Route("add")]
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddProduct([FromBody]Product product)
         {
             if (ModelState.IsValid)
