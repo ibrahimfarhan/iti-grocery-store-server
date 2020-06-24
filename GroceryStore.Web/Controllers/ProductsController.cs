@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using GroceryStore.DbLayer.Entities;
 using GroceryStore.Store;
+using GroceryStore.Web.ApiModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -35,17 +37,22 @@ namespace GroceryStore.Web.Controllers
                     return Ok();
                 }
 
-                return Ok(products.Select(p => new 
-                { 
-                    p.Id, p.Name, p.Price, Images = p.Images.Select(i => i.Url),
-                    p.MeasurementUnit, p.Discount, CategoryName = p.Category.Name
+                return Ok(products.Select(p => new ProductModel
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    Discount = p.Discount,
+                    CategoryId = p.CategoryId,
+                    CategoryName = p.Category.Name,
+                    ImgUrl = p.Images.Select(i => i.Url).ToList()
                 }));
             }
             catch (Exception)
             {
-                return BadRequest();
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
-            
         }
 
         [HttpGet]
@@ -58,55 +65,90 @@ namespace GroceryStore.Web.Controllers
                 var product = await UnitOfWork.ProductManager.GetByIdAsync(id);
                 if(product == null)
                 {
-                    return NotFound();
+                    return Ok();
                 }
-                return Ok(product);
+                ProductModel returnedProduct= new ProductModel
+                {
+                    Id = product.Id,
+                    Name = product.Name,
+                    Description = product.Description,
+                    Price = product.Price,
+                    Discount = product.Discount,
+                    CategoryId = product.CategoryId,
+                    CategoryName = product.Category.Name,
+                    ImgUrl = product.Images.Select(i => i.Url).ToList()
+                };
+                return Ok(returnedProduct);
             }
             catch (Exception)
             {
-                return BadRequest();
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
         }
 
         [HttpGet]
         [Route("{categoryName}")]
-        public async Task<IActionResult> GetProductByCategoryName(string categoryName)
+        public async Task<IActionResult> GetProductsByCategoryName(string categoryName)
         {
             if (categoryName == null) return BadRequest();
             try
             {
-                var product = await UnitOfWork.ProductManager.GetByCategoryNameAsync(categoryName);
-                if(product == null)
+                var products = await UnitOfWork.ProductManager.GetByCategoryNameAsync(categoryName);
+                if (products == null)
                 {
-                    return NotFound();
+                    return Ok();
                 }
-                return Ok(product);
+
+                return Ok(products.Select(p => new ProductModel
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    Discount = p.Discount,
+                    CategoryId = p.CategoryId,
+                    CategoryName = p.Category.Name,
+                    ImgUrl = p.Images.Select(i => i.Url).ToList()
+                }));
             }
             catch (Exception)
             {
-                return BadRequest();
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
         }
 
         [HttpPost]
         [Route("add")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AddProduct([FromBody]Product product)
+        public async Task<IActionResult> AddProduct([FromBody]ProductModel product)
         {
+            var images = product.ImgUrl.Select(i => new Image { Url = i }).ToList();
+            Product newProduct = new Product
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                Discount = product.Discount,
+                CategoryId = product.CategoryId,
+                Images = images
+            };
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var prod = await UnitOfWork.ProductManager.AddAsync(product);
-                    if (prod == null)
+                    var addedProduct = await UnitOfWork.ProductManager.AddAsync(newProduct);
+                    if (addedProduct == null)
                     {
-                        return NotFound();
+                        return BadRequest();
                     }
-                    return Ok(prod);
+
+                    return Ok(addedProduct);
                 }
                 catch (Exception)
                 {
-                    return BadRequest();
+                    return StatusCode((int)HttpStatusCode.InternalServerError);
                 }
             }
             return BadRequest();
@@ -115,25 +157,36 @@ namespace GroceryStore.Web.Controllers
         [HttpPost]
         [Route("edit")]
         [Authorize(Roles = "admin")]
-        public async Task<IActionResult> EditProduct([FromBody]Product product)
+        public async Task<IActionResult> EditProduct([FromBody]ProductModel product)
         {
             bool result;
+            var images = product.ImgUrl.Select(i => new Image { Url = i }).ToList();
+            Product editedProduct = new Product
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                Discount = product.Discount,
+                CategoryId = product.CategoryId,
+                Images = images
+            };
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    result = await UnitOfWork.ProductManager.UpdateAsync(product);
-                    return Ok();
-                }
-                catch (Exception ex)
-                {
-                    if (ex.GetType().FullName ==
-                             "Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException")
+                    result = await UnitOfWork.ProductManager.UpdateAsync(editedProduct);
+                    if (!result)
                     {
-                        return NotFound();
+                        return BadRequest();
                     }
 
-                    return BadRequest();
+                    return Ok();
+                }
+                catch (Exception)
+                {
+                    return StatusCode((int)HttpStatusCode.InternalServerError);
                 }
             }
             return BadRequest();
@@ -142,21 +195,33 @@ namespace GroceryStore.Web.Controllers
         [HttpPost]
         [Route("delete")]
         [Authorize(Roles = "admin")]
-        public async Task<IActionResult> DeleteProduct(Product product)
+        public async Task<IActionResult> DeleteProduct(ProductModel product)
         {
             bool result;
+            var images = product.ImgUrl.Select(i => new Image { Url = i }).ToList();
+            Product deletedProduct = new Product
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                Discount = product.Discount,
+                CategoryId = product.CategoryId,
+                Images = images
+            };
+
             try
             {
-                result = await UnitOfWork.ProductManager.RemoveAsync(product);
+                result = await UnitOfWork.ProductManager.RemoveAsync(deletedProduct);
                 if (!result)
                 {
-                    return NotFound();
+                    return BadRequest();
                 }
                 return Ok();
             }
             catch (Exception)
             {
-                return BadRequest();
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
         }
     }
