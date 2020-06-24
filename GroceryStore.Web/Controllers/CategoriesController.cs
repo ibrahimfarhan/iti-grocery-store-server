@@ -44,7 +44,7 @@ namespace GroceryStore.Web.Controllers
 
         [HttpPost]
         [Route("add")]
-        [Authorize(Roles = "admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> AddCategory([FromBody] Category category)
         {
             if (ModelState.IsValid)
@@ -72,7 +72,7 @@ namespace GroceryStore.Web.Controllers
 
         [HttpPost]
         [Route("edit")]
-        [Authorize(Roles = "admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> EditCategory([FromBody] CategoryModel categoryModel)
         {
 
@@ -99,7 +99,7 @@ namespace GroceryStore.Web.Controllers
 
         [HttpPost]
         [Route("delete")]
-        [Authorize(Roles = "admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> DeleteCategory(CategoryModel categoryModel)
         {
             bool result;

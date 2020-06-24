@@ -80,7 +80,7 @@ namespace GroceryStore.Web.Controllers
                 };
                 return Ok(returnedProduct);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError);
             }
@@ -108,7 +108,7 @@ namespace GroceryStore.Web.Controllers
                     Discount = p.Discount,
                     CategoryId = p.CategoryId,
                     CategoryName = p.Category.Name,
-                    ImgUrl = p.Images.Select(i => i.Url).ToList()
+                    ImgUrl = p.Images != null ? p.Images.Select(i => i.Url).ToList() : null
                 }));
             }
             catch (Exception)
@@ -119,10 +119,16 @@ namespace GroceryStore.Web.Controllers
 
         [HttpPost]
         [Route("add")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> AddProduct([FromBody]ProductModel product)
         {
-            var images = product.ImgUrl.Select(i => new Image { Url = i }).ToList();
+            List<Image> images = null;
+
+            if (product.ImgUrl != null)
+            {
+                images = product.ImgUrl.Select(i => new Image { Url = i }).ToList();
+            }
+
             Product newProduct = new Product
             {
                 Id = product.Id,
@@ -156,11 +162,17 @@ namespace GroceryStore.Web.Controllers
 
         [HttpPost]
         [Route("edit")]
-        [Authorize(Roles = "admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> EditProduct([FromBody]ProductModel product)
         {
             bool result;
-            var images = product.ImgUrl.Select(i => new Image { Url = i }).ToList();
+            List<Image> images = null;
+
+            if (product.ImgUrl != null)
+            {
+                images = product.ImgUrl.Select(i => new Image { Url = i }).ToList();
+            }
+
             Product editedProduct = new Product
             {
                 Id = product.Id,
@@ -194,7 +206,7 @@ namespace GroceryStore.Web.Controllers
 
         [HttpPost]
         [Route("delete")]
-        [Authorize(Roles = "admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> DeleteProduct(ProductModel product)
         {
             bool result;

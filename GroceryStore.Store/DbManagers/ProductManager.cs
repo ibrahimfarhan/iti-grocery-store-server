@@ -19,9 +19,14 @@ namespace GroceryStore.Store.DbManagers
             return await Set.Include(p => p.Category).Include(p => p.Images).ToListAsync();
         }
 
+        public new async Task<Product> GetByIdAsync(params object[] id)
+        {
+            return await Set.Include(p => p.Category).Where(p => p.Id == Convert.ToInt32(id)).FirstOrDefaultAsync();
+        }
+
         public async Task<IEnumerable<Product>> GetByCategoryNameAsync(string categoryName)
         {
-            return await Set.Where(p => p.Category.Name == categoryName).ToListAsync();
+            return await Set.Include(p => p.Category).Where(p => p.Category.Name == categoryName).ToListAsync();
         }
     }
 }
